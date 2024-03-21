@@ -19,9 +19,9 @@ from django.urls import path
 from news_agency_app.views import loginURL, logoutURL, storiesURL, delete_storyURL
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/login/', loginURL, name='login'),
-    path('api/logout/', logoutURL, name='logout'),
-    path('api/stories/', storiesURL, name='stories'),
-    path('api/stories/<str:key>/', delete_storyURL, name='delete_story')
+    path('admin', admin.site.urls),
+    path('api/login', loginURL, name='login'),
+    path('api/logout', logoutURL, name='logout'),
+    path('api/stories', storiesURL, name='stories'),
+    path('api/stories/<str:key>', delete_storyURL, name='delete_story')
 ]

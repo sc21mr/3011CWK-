@@ -1,5 +1,6 @@
 import requests
 import re
+import json
 
 session = requests.Session()
 GlobalURL = None
@@ -11,9 +12,10 @@ def client_get_agencies():
 		response = session.get("https://newssites.pythonanywhere.com/api/directory/")
 		
 		if response.status_code == 200:
-			for agency in response.json()['agency_list']:
+			agencies = json.loads(response.content.decode('utf-8'))
+			for agency in agencies:
 				NewsSites.append(agency)
-				return 0
+			return 0
 		else:
 			if response.json()['message'] is not None:
 				print(response.json()['message'])
@@ -30,7 +32,7 @@ def client_login(choice):
 		print("Invalid URL. Please try again.")
 		return
 
-	if (not url.startswith("http://")): # change at sumbit
+	if (not url.startswith("http://")) and (not url.startswith("https://")):
 		print("Invalid URL. Please try again.")
 		return
 	
@@ -41,7 +43,7 @@ def client_login(choice):
 	username = input("Enter username: ")
 	password = input("Enter password: ")
 	
-	response = session.post(url + "/api/login/", data={"username": username, "password": password})
+	response = session.post(url + "/api/login", data={"username": username, "password": password})
 	print(response.json()['message'])
 	if response.status_code == 200:
 		GlobalURL = url
@@ -55,7 +57,7 @@ def client_logout():
 	csrf_token = session.cookies.get('csrftoken')
 	headers = {'X-CSRFToken': csrf_token} if csrf_token else {}
 
-	response = session.post(GlobalURL + "/api/logout/", headers=headers)
+	response = session.post(GlobalURL + "/api/logout", headers=headers)
 	GlobalURL = None
 	print(response.json()['message'])
 
@@ -73,7 +75,7 @@ def client_post_story():
 	region = input("Enter region: ")
 	details = input("Enter details: ")
 
-	response = session.post(GlobalURL + "/api/stories/", headers=headers, json={
+	response = session.post(GlobalURL + "/api/stories", headers=headers, json={
 		"headline": headline,
 		"category": category,
 		"region": region,
@@ -83,6 +85,7 @@ def client_post_story():
 
 def client_get_stories(choice):
 	global GlobalURL
+	global NewsSites
 	if GlobalURL is None:
 		print("Login for a valid URL first")
 		return
@@ -105,7 +108,7 @@ def client_get_stories(choice):
 
 	for match in matches:
 		if match[0] == "id":
-			if not match[1].isdigit():
+			if not re.match(r'^[A-Z]{3}\d{2}$', match[1]):
 				print("Invalid id. Please try again.")
 				return
 			id_value = match[1]
@@ -121,22 +124,31 @@ def client_get_stories(choice):
 			reg_value = match[1]
 		elif match[0] == "date":
 			date_value = match[1]
-		
+	
 	responses = None
 	if id_value is not None:
+		found = False
 		for site in NewsSites:
+			print(site)
 			if site['agency_code'] == id_value:
+				found = True
 				agency_name = site['agency_name']
 				url = site['url']
 				agency_code = site['agency_code']
-				responses = session.get(url + "/api/stories/?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"), headers=headers)
-			else:
-				print("Id not registered in directory service")
-				return
+				print(url + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"))
+				responses = session.get(url + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"), headers=headers)
+			if found:
+				break
+		if not found:
+			print("Invalid agency code. Please try again.")
+			return
 	else:
 		for site in NewsSites:
-			responses.append(session.get(site['url'] + "/api/stories/?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"), headers=headers))
+			print(url + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"))
+			responses.append(session.get(site['url'] + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"), headers=headers))
 	for response in responses:
+		print(response)
+		'''
 		if response.status_code == 200:
 			print('---------------')
 			for story in response.json()['stories']:
@@ -150,6 +162,7 @@ def client_get_stories(choice):
 				print('---------------')
 		else:
 			print(response.json()['message'])
+		'''
 
 def client_delete_story(choice):
 	global GlobalURL
@@ -170,7 +183,7 @@ def client_delete_story(choice):
 	csrf_token = session.cookies.get('csrftoken')
 	headers = {'X-CSRFToken': csrf_token} if csrf_token else {}
 	
-	response = session.post(GlobalURL + "/api/stories/" + news_id + "/", headers=headers, data={"id": news_id})
+	response = session.post(GlobalURL + "/api/stories/" + news_id, headers=headers, data={"id": news_id})
 	print(response.json()['message'])
 
 def main():
@@ -186,7 +199,7 @@ def main():
 						 7 : "Exit"
 						 }
 	
-	if (not client_get_agencies()):
+	if (client_get_agencies()):
 		return
 
 	while True:
@@ -211,9 +224,9 @@ def main():
 		elif choice == "list":
 			print("----------")
 			for site in NewsSites:
-				print(site['agency_code'])
 				print(site['agency_name'])
-				print(site['agency_url'])
+				print(site['url'])
+				print(site['agency_code'])
 				print("----------")
 		elif choice.startswith("delete "):
 			client_delete_story(choice)

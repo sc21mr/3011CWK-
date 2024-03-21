@@ -40,6 +40,8 @@ def logoutURL(request):
 
 @csrf_exempt
 def storiesURL(request):
+  if not request.user.is_authenticated:
+    return JsonResponse({'message': 'You are not logged in'}, status=401)
   if request.method == 'POST':
     request_body = request.body.decode('utf-8')
     json_data = json.loads(request_body)
@@ -124,6 +126,8 @@ def storiesURL(request):
 
 @csrf_exempt
 def delete_storyURL(request):
+  if not request.user.is_authenticated:
+    return JsonResponse({'message': 'You are not logged in'}, status=401)
   if request.method == 'POST':
     news_id = request.POST.get('id')
     if news_id is None:
