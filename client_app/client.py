@@ -45,6 +45,7 @@ def client_login(choice):
 	
 	print(url + "/api/login")
 	response = session.post(url + "/api/login", data={"username": username, "password": password})
+	print(response)
 	print(response.json()['message'])
 	if response.status_code == 200:
 		GlobalURL = url
