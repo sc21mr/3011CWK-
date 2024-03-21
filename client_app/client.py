@@ -33,7 +33,7 @@ def client_login(choice):
 		print("Invalid URL. Please try again.")
 		return
 
-	if (not url.startswith("https://") and not url.startswith("http://")):
+	if (not url.startswith("https://")):# and not url.startswith("http://")):
 		print("Invalid URL. Please try again.")
 		return
 	
@@ -125,14 +125,6 @@ def client_get_stories(choice):
 			reg_value = match[1]
 		elif match[0] == "date":
 			date_value = match[1]
-	
-	data = {
-		"story_cat": cat_value,
-		"story_region": reg_value,
-		"story_date": date_value
-	}
-
-	print(data)
 
 	if id_value is not None:
 		found = False
@@ -140,7 +132,6 @@ def client_get_stories(choice):
 			if site['agency_code'] == id_value:
 				found = True
 				url = site['url']
-				print(url)
 				response = session.get(url + "/api/stories", headers=headers, params={"story_cat": cat_value, "story_region": reg_value, "story_date": date_value})
 				counter = 0
 				try:
