@@ -1,6 +1,7 @@
 import requests
 import re
 import json
+import msvcrt
 
 session = requests.Session()
 GlobalURL = None
@@ -43,9 +44,7 @@ def client_login(choice):
 	username = input("Enter username: ")
 	password = input("Enter password: ")
 	
-	print(url + "/api/login")
 	response = session.post(url + "/api/login", data={"username": username, "password": password})
-	print(response)
 	print(response.json()['message'])
 	if response.status_code == 200:
 		GlobalURL = url
@@ -127,44 +126,108 @@ def client_get_stories(choice):
 		elif match[0] == "date":
 			date_value = match[1]
 	
-	responses = None
+	data = {
+		"story_cat": cat_value,
+		"story_region": reg_value,
+		"story_date": date_value
+	}
+
 	if id_value is not None:
 		found = False
 		for site in NewsSites:
-			print(site)
 			if site['agency_code'] == id_value:
 				found = True
-				agency_name = site['agency_name']
 				url = site['url']
-				agency_code = site['agency_code']
-				print(url + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"))
-				responses = session.get(url + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"), headers=headers)
-			if found:
-				break
+				response = session.get(url + "/api/stories", headers=headers, data=data)
+				counter = 0
+				try:
+					print('---------------')
+					stories = response.json()['stories']
+					for story in stories:
+						print('Key:', story['key'])
+						print('Headline:', story['headline'])
+						print('Category:', story['story_cat'])
+						print('Region:', story['story_region'])
+						print('Author:', story['author'])
+						print('Date:', story['story_date'])
+						print('Details:', story['story_details'])
+						print('---------------')
+						counter += 1
+						if counter >= 5:
+							counter = 0
+							if stories.index(story) != len(stories) - 1:
+								user_input = None
+								while True:
+									print("Press Enter to continue or Backspace to exit: ", end="", flush=True)
+									user_input = msvcrt.getch()
+									if user_input == b'\r':
+											print('\n---------------')
+											break
+									elif user_input == b'\x08':
+										print('\n---------------')
+										return
+									else:
+										print("Invalid input. Please try again.")
+				except:
+					print("An error occurred when fetching stories from", site['agency_name'])
 		if not found:
 			print("Invalid agency code. Please try again.")
 			return
 	else:
 		for site in NewsSites:
-			print(url + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"))
-			responses.append(session.get(site['url'] + "/api/stories?story_cat=" + (cat_value if cat_value else "*") + "&story_region=" + (reg_value if reg_value else "*") + "&story_date=" + (date_value if date_value else "*"), headers=headers))
-	for response in responses:
-		print(response)
-		'''
-		if response.status_code == 200:
-			print('---------------')
-			for story in response.json()['stories']:
-				print('Key:', story['key'])
-				print('Headline:', story['headline'])
-				print('Category:', story['story_cat'])
-				print('Region:', story['story_region'])
-				print('Author:', story['author'])
-				print('Date:', story['story_date'])
-				print('Details:', story['story_details'])
+			while True:
+				print("Press Enter to continue or Backspace to exit: ", end="", flush=True)
+				user_input = msvcrt.getch()
+				if user_input == b'\r':
+						print('\n---------------')
+						break
+				elif user_input == b'\x08':
+					print('\n---------------')
+					return
+				else:
+					print("Invalid input. Please try again.")
+			response = session.get(site['url'] + "/api/stories", headers=headers, data=data)
+			try:
+				if response.status_code == 200:
+					print("Stories from", site['agency_name'])
+					counter = 0
+					print('---------------')
+					stories = response.json()['stories']
+					for story in stories:
+						print('Key:', story['key'])
+						print('Headline:', story['headline'])
+						print('Category:', story['story_cat'])
+						print('Region:', story['story_region'])
+						print('Author:', story['author'])
+						print('Date:', story['story_date'])
+						print('Details:', story['story_details'])
+						print('---------------')
+						counter += 1
+						if counter >= 5:
+							counter = 0
+							if stories.index(story) != len(stories) - 1:
+								user_input = None
+								while True:
+									print("Press Enter to continue or Backspace to move to next site: ", end="", flush=True)
+									user_input = msvcrt.getch()
+									if user_input == b'\r':
+											counter = 0
+											print('\n---------------')
+											break
+									elif user_input == b'\x08':
+										print('\n---------------')
+										return
+									else:
+										print("Invalid input. Please try again.")
+				else:
+					print(response.json()['message'])
+			except:
+				print("An error occurred when fetching stories from", site['agency_name'])
+				try:
+					print(response.json()['message'])
+				except:
+					print("No message available")
 				print('---------------')
-		else:
-			print(response.json()['message'])
-		'''
 
 def client_delete_story(choice):
 	global GlobalURL
@@ -185,7 +248,7 @@ def client_delete_story(choice):
 	csrf_token = session.cookies.get('csrftoken')
 	headers = {'X-CSRFToken': csrf_token} if csrf_token else {}
 	
-	response = session.post(GlobalURL + "/api/stories/" + news_id, headers=headers, data={"id": news_id})
+	response = session.post(GlobalURL + "/api/stories/" + news_id, headers=headers, data={"key": news_id})
 	print(response.json()['message'])
 
 def main():

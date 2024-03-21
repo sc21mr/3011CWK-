@@ -125,11 +125,11 @@ def storiesURL(request):
     return JsonResponse({'message': 'Invalid request'}, status=400)
 
 @csrf_exempt
-def delete_storyURL(request):
+def delete_storyURL(request, key):
   if not request.user.is_authenticated:
     return JsonResponse({'message': 'You are not logged in'}, status=401)
   if request.method == 'POST':
-    news_id = request.POST.get('id')
+    news_id = request.POST.get('key')
     if news_id is None:
       return JsonResponse({'message': 'Invalid ID'}, status=503)
     try:
