@@ -139,7 +139,7 @@ def client_get_stories(choice):
 		for site in NewsSites:
 			if site['agency_code'] == id_value:
 				found = True
-				url = GlobalURL
+				url = site['url']
 				print(url)
 				response = session.get(url + "/api/stories", headers=headers, params={"story_cat": cat_value, "story_region": reg_value, "story_date": date_value})
 				counter = 0
