@@ -70,6 +70,7 @@ def storiesURL(request):
     category = request.GET.get('story_cat')
     region = request.GET.get('story_region')
     date = request.GET.get('story_date')
+    print(category, region, date)
 
     if category is None:
       category = '*'
@@ -87,6 +88,7 @@ def storiesURL(request):
       except ValueError:
         return JsonResponse({'message': 'Invalid date format'}, status=400)
 
+    print(category, region, date)
     if category == '*' and region == '*' and date == '*':
       stories = News.objects.all()
     elif category != '*' and region == '*' and date == '*':
