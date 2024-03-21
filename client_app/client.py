@@ -43,6 +43,7 @@ def client_login(choice):
 	username = input("Enter username: ")
 	password = input("Enter password: ")
 	
+	print(url + "/api/login")
 	response = session.post(url + "/api/login", data={"username": username, "password": password})
 	print(response.json()['message'])
 	if response.status_code == 200:
