@@ -12,7 +12,7 @@ from datetime import datetime as STRPDATETIME
 def loginURL(request):
   if request.method == 'POST':
     if request.user.is_authenticated:
-      return JsonResponse({'message': 'You are already logged in'}, status=200)
+      return JsonResponse({'message': 'You are already logged in'}, status=403)
     username = request.POST.get('username')
     password = request.POST.get('password')
     user = authenticate(username=username, password=password)
@@ -70,7 +70,6 @@ def storiesURL(request):
     category = request.GET.get('story_cat')
     region = request.GET.get('story_region')
     date = request.GET.get('story_date')
-    print(category, region, date)
 
     if category is None:
       category = '*'
@@ -88,7 +87,6 @@ def storiesURL(request):
       except ValueError:
         return JsonResponse({'message': 'Invalid date format'}, status=400)
 
-    print(category, region, date)
     if category == '*' and region == '*' and date == '*':
       stories = News.objects.all()
     elif category != '*' and region == '*' and date == '*':

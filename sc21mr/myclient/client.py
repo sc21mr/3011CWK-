@@ -10,7 +10,7 @@ NewsSites = []
 def client_get_agencies():
 		global NewsSites
 
-		response = session.get("https://newssites.pythonanywhere.com/api/directory/")
+		response = session.get("http://newssites.pythonanywhere.com/api/directory/")
 		
 		if response.status_code == 200:
 			agencies = json.loads(response.content.decode('utf-8'))
@@ -33,7 +33,7 @@ def client_login(choice):
 		print("Invalid URL. Please try again.")
 		return
 
-	if (not url.startswith("https://")):# and not url.startswith("http://")):
+	if (not url.startswith("http://")):
 		print("Invalid URL. Please try again.")
 		return
 	
@@ -85,11 +85,7 @@ def client_post_story():
 	print(response.json()['message'])
 
 def client_get_stories(choice):
-	global GlobalURL
 	global NewsSites
-	if GlobalURL is None:
-		print("Login for a valid URL first")
-		return
 
 	csrf_token = session.cookies.get('csrftoken')
 	headers = {'X-CSRFToken': csrf_token} if csrf_token else {}
@@ -187,7 +183,7 @@ def client_get_stories(choice):
 					return
 				else:
 					print("Invalid input. Please try again.")
-			response = session.get(site['url'] + "/api/stories", headers=headers, params=data)
+			response = session.get(site['url'] + "/api/stories", headers=headers, params={"story_cat": cat_value, "story_region": reg_value, "story_date": date_value})
 			try:
 				if response.status_code == 200:
 					print("Stories from", site['agency_name'])
@@ -209,7 +205,7 @@ def client_get_stories(choice):
 							if stories.index(story) != len(stories) - 1:
 								user_input = None
 								while True:
-									print("Press Enter to continue or Backspace to move to next site: ", end="", flush=True)
+									print("Press Enter to continue or Backspace to exit: ", end="", flush=True)
 									user_input = msvcrt.getch()
 									if user_input == b'\r':
 											counter = 0
@@ -262,7 +258,7 @@ def main():
 						 4 : "For Get Story type \'news -id=[id] -cat=[cat] -reg=[reg] -date=[date]\' note that the date should be in the format DD/MM/YYYY",
 						 5 : "For List Sites type \'list\'",
 						 6 : "For Delete Story type \'delete [story_key]\'",
-						 7 : "Exit"
+						 7 : "For Exit type 'exit'"
 						 }
 	
 	if (client_get_agencies()):
@@ -296,6 +292,8 @@ def main():
 				print("----------")
 		elif choice.startswith("delete "):
 			client_delete_story(choice)
+		elif choice == "exit":
+			break
 		else:
 			print("Invalid choice. Please try again.")
 
