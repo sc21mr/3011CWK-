@@ -33,7 +33,7 @@ def client_login(choice):
 		print("Invalid URL. Please try again.")
 		return
 
-	if (not url.startswith("http://")):
+	if (not url.startswith("http://") and not url.startswith("https://")):
 		print("Invalid URL. Please try again.")
 		return
 	
