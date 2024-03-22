@@ -61,7 +61,7 @@ def storiesURL(request):
       return JsonResponse({'message': 'Service Unavailable'}, status=503)
     
     author = Authors.objects.get(author_username=request.user.username)
-    datetime = Date.today().strftime('%d/%m/%Y')
+    datetime = Date.today()
     news = News(headline=headline, category=category, region=region, author=author, datetime=datetime, details=details)
     news.save()
 
@@ -115,7 +115,7 @@ def storiesURL(request):
         'story_cat': story.category,
         'story_region': story.region,
         'author': story.author.author_name,
-        'story_date': str(story.datetime),
+        'story_date': str(story.datetime.strftime('%d/%m/%Y')),
         'story_details': story.details
       }
       story_list.append(story_data)
