@@ -61,7 +61,7 @@ def storiesURL(request):
       return JsonResponse({'message': 'Service Unavailable'}, status=503)
     
     author = Authors.objects.get(author_username=request.user.username)
-    datetime = Date.today()
+    datetime = Date.today().strftime('%d/%m/%Y')
     news = News(headline=headline, category=category, region=region, author=author, datetime=datetime, details=details)
     news.save()
 
